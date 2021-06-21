@@ -57,7 +57,7 @@ Collection 是 Queue 的父接口
 
 Collection 中包含 Iterator 接口
 
-```
+```java
 public static void main(String[] args) {
     List<String> list = Arrays.asList("h","e","e","e","e");
     list.iterator().forEachRemaining(item->{
@@ -142,7 +142,7 @@ map 的key 是弱引用，且有队列维护，将失效 key 的 entries 自动�
 
 > HashSet 的实现原理
 
-```
+```java
 public HashSet() {
     map = new HashMap<>();
 }
@@ -234,7 +234,7 @@ T，E，K，V，？
 
 我有一个父类 Animal 和几个子类，如狗、猫等，现在我需要一个动物的列表，我的第一个想法是像这样的：
 
-```
+```java
 List<Animal> listAnimals
 ```
 
@@ -242,7 +242,7 @@ List<Animal> listAnimals
 
 但是老板的想法确实这样的：
 
-```
+```java
 List<? extends Animal> listAnimals
 ```
 
@@ -250,7 +250,7 @@ List<? extends Animal> listAnimals
 
 为什么要使用通配符而不是简单的泛型呢？通配符其实在声明局部变量时是没有什么意义的，但是当你为一个方法声明一个参数时，它是非常重要的。
 
-```
+```java
 static int countLegs (List<? extends Animal > animals ) {
     int retVal = 0;
     for ( Animal animal : animals )
@@ -299,7 +299,7 @@ public static void main(String[] args) {
 
 用 super 进行声明，表示参数化的类型可能是所指定的类型，或者是此类型的父类型，直至 Object
 
-```
+```java
 private <T> void test(List<? super T> dst, List<T> src){
     for (T t : src) {
         dst.add(t);
@@ -328,13 +328,13 @@ T 是一个 确定的 类型，通常用于泛型类和泛型方法的定义，�
 - 通过 类型参数（T）来确保泛型参数的一致性
 - 类型参数（T）可以多重限定而通配符不行
 
-```
+```java
 <T extends InterfaceA & InterfaceB>
 ```
 
 - 通配符（？）可以使用超类限定而类型参数（T）不行
 
-```
+```java
 // 类型参数T
 T extends A
 
@@ -347,7 +347,7 @@ T extends A
 
 ## Class< T >
 
-```
+```java
 // 通过反射的方式生成  multiLimit 
 // 对象，这里比较明显的是，我们需要使用强制类型转换
 MultiLimit multiLimit = (MultiLimit)Class.forName("com.glmapper.bridge.boot.generic.MultiLimit").newInstance();
@@ -357,7 +357,7 @@ MultiLimit multiLimit = (MultiLimit)Class.forName("com.glmapper.bridge.boot.gene
 
 对于这种情况，则可以使用下面的代码来代替，使得在在编译期就能直接 检查到类型的问题：
 
-```
+```java
 public class Test01 {
     public static void main(String[] args) throws InstantiationException, IllegalAccessException {
         A a = createInstance(A.class);
@@ -379,7 +379,7 @@ class B{}
 
 `Class<T>` 在实例化的时候，T 要替换成具体类。`Class<?>` 它是个通配泛型，? 可以代表任何类型，所以主要用于声明时的限制情况。比如，我们可以这样做申明：
 
-```
+```java
 // 可以
 public Class<?> clazz;
 // 不可以，因为 T 需要指定类型(让当前的类也指定 T 才行)
@@ -418,7 +418,7 @@ Java 中可以实现一个类中包含另外一个类，且不需要提供任何
 
 
 
-```
+```java
 class outerClass {
     // 定义一个匿名类
     object1 = new Type(parameterList) {
@@ -439,7 +439,7 @@ class outerClass {
 
 
 
-```
+```java
 new Thread(new Runnable(){
     @Override
     public void run() {
@@ -599,14 +599,14 @@ static修饰的成员（变量、方法）被所有对象所共享，也叫静�
 
 
 
-```
+```java
 // class 知道自己是由哪个 classLoader 加载的
 JdbcUtils.class.getClassLoader();
 ```
 
 
 
-```
+```java
 class Class<T> {
   ...
   private final ClassLoader classLoader;
@@ -634,7 +634,7 @@ Window平台上的环境变量，主要有3个：JAVA_HOME、PATH、CLASSPATH
 
 ```
 CLASSPATH=.;%JAVA_HOME%\lib;%JAVA_HOME%\lib\tools.jar
-```
+```java
 
 指向jar包路径（以分号分割），需要注意最前面的 `.`表示当前目录
 
@@ -704,7 +704,7 @@ AppClassLoader 在加载一个未知的类名时，它并不是立即去搜寻 C
 
 
 
-```
+```java
 class ClassLoader {
   ...
   private final ClassLoader parent;
@@ -724,13 +724,13 @@ class ClassLoader {
 
 当我们在使用 jdbc 驱动时，经常会使用 Class.forName 方法来动态加载驱动类。
 
-```
+```java
 Class.forName("com.mysql.cj.jdbc.Driver");
 ```
 
 其原理是 mysql 驱动的 Driver 类里有一个静态代码块，它会在 Driver 类被加载的时候执行。这个静态代码块会将 mysql 驱动实例注册到全局的 jdbc 驱动管理器里。
 
-```
+```java
 class Driver {
   static {
     try {
@@ -747,7 +747,7 @@ class Driver {
 
 forName 方法同样也是使用调用者 Class 对象的 ClassLoader 来加载目标类。不过 forName 还提供了多参数版本，可以指定使用哪个 ClassLoader 来加载
 
-```
+```java
 Class<?> forName(String name, boolean initialize, ClassLoader cl)
 ```
 
@@ -763,7 +763,7 @@ loadClass() 方法是加载目标类的入口，它首先会查找当前 ClassLo
 
 
 
-```
+```java
 class ClassLoader {
 
   // 加载入口，定义了双亲委派规则
@@ -807,7 +807,7 @@ class CustomClassLoader extends ClassLoader {
 
 自定义类加载器不易破坏双亲委派规则，不要轻易覆盖 loadClass 方法。否则可能会导致自定义加载器无法加载内置的核心类库。在使用自定义加载器时，要明确好它的父加载器是谁，将父加载器通过子类的构造器传入。如果父类加载器是 null，那就表示父加载器是「根加载器」。
 
-```
+```java
 // ClassLoader 构造器
 protected ClassLoader(String name, ClassLoader parent);
 ```
@@ -824,7 +824,7 @@ protected ClassLoader(String name, ClassLoader parent);
 
 
 
-```
+```java
 Class<?> x = Class.forName("[I");
 System.out.println(x);
 
@@ -860,7 +860,7 @@ Exception in thread "main" java.lang.ClassNotFoundException: [I
 
 
 
-```
+```java
 public class Dep {
     public void print() {
         System.out.println("v1");
@@ -899,7 +899,7 @@ public class Test {
 
 
 
-```
+```java
 $ cd ~/source/jcl/v1
 $ javac Dep.java
 $ cd ~/source/jcl/v2
@@ -918,7 +918,7 @@ false
 
 
 
-```
+```java
 depv1Class.equals(depv2Class)
 ```
 
@@ -928,7 +928,7 @@ depv1Class.equals(depv2Class)
 
 
 
-```
+```java
 Class<?> depv1Class = v1.loadClass("Dep");
 IPrint depv1 = (IPrint)depv1Class.getConstructor().newInstance();
 depv1.print()
@@ -966,7 +966,7 @@ ClassLoader 固然可以解决依赖冲突问题，不过它也限制了不同�
 
 
 
-```
+```java
 class Thread {
   ...
   private ClassLoader contextClassLoader;
@@ -990,7 +990,7 @@ contextClassLoader「线程上下文类加载器」，这究竟是什么东西�
 
 
 
-```
+```java
 Thread.currentThread().getContextClassLoader().loadClass(name);
 ```
 
@@ -2193,7 +2193,7 @@ Soft Reference
 
 
 
-```
+```java
 public class Test_SoftReference {
     public static void main(String[] args) throws InterruptedException {
         SoftReference m = new SoftReference<>(new byte[1024 * 1024 * 10]);
@@ -2214,7 +2214,7 @@ public class Test_SoftReference {
 
 
 
-```
+```java
 [B@4554617c[B@4554617cnull
 ```
 
@@ -2240,7 +2240,7 @@ public class Test_SoftReference {
 
 
 
-```
+```java
 public class Test03_WeakReference {
     public static void main(String[] args) throws InterruptedException {
         WeakReference m = new WeakReference<>(new byte[1024]);
@@ -2329,7 +2329,7 @@ NIO 的管理直接内存
 
 
 
-```
+```java
 // 分配到 JVM 内存空间，堆内存
 ByteBuffer b = ByteBuffer.allocate(1024);
 // 直接分配到 OS 内存空间，也叫直接内存（JVM堆外内存）
