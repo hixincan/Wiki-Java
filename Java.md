@@ -1,5 +1,11 @@
 
 
+# 关键字
+
+## instanceof
+
+
+
 
 
 # 枚举
@@ -29,7 +35,7 @@ enum Color
 
 
 
-​	![image](Java.assets/image-20210607232555254.png)
+​	<img src="Java.assets/image-20210607232555254.png" alt="image"  />
 
 
 
@@ -174,10 +180,32 @@ public HashSet() {
 
 # 泛型
 
+Generics
+
 特点
 
-* 适用于编译阶段 for  javac
+* 仅适用于编译阶段 for  javac
 * 类型安全 —— 数据的安全性？免去强制类型转换？？
+* 规范集合的元素
+* 提高代码的可读性
+
+
+
+> 类型擦除
+
+泛型在编译器有效，在运行期被删除，也就是说所有的泛型参数类型在编译后都会被清除掉。
+
+在编译后所有的泛型类型都会做相应的转化。转换规则如下：
+
+* List<String>、List<Integer>、List<T> 擦出后的类型为 List。
+* List<String>[] 擦除后的类型为 List[]。
+* List<? extends E>、List<? super E> 擦出后的类型为 List<E>。
+* List<T extends Serializable & Cloneable> 擦出后为 List<Serializable>。
+
+
+
+
+
 
 
 
@@ -534,7 +562,6 @@ static修饰的成员（变量、方法）被所有对象所共享，也叫静�
     * 验证
     * ？：静态变量、常量
 * 初始化
-    * 
 
 加载类的时机
 
@@ -580,8 +607,6 @@ static修饰的成员（变量、方法）被所有对象所共享，也叫静�
 
 
 > ClassLoader 的作用
-
-
 
 它是用来加载 Class 的。它负责将 Class 的字节码形式转换成内存形式的 Class 对象。字节码可以来自于磁盘文件 *.class，也可以是 jar 包里的* .class，也可以来自远程服务器提供的字节流，字节码的本质就是一个字节数组 []byte，它有特定的复杂的内部格式。
 
@@ -632,9 +657,11 @@ Window平台上的环境变量，主要有3个：JAVA_HOME、PATH、CLASSPATH
 
 > classPath
 
-```
-CLASSPATH=.;%JAVA_HOME%\lib;%JAVA_HOME%\lib\tools.jar
 ```java
+CLASSPATH=.;%JAVA_HOME%\lib;%JAVA_HOME%\lib\tools.jar
+```
+
+
 
 指向jar包路径（以分号分割），需要注意最前面的 `.`表示当前目录
 
@@ -899,7 +926,7 @@ public class Test {
 
 
 
-```java
+```shell
 $ cd ~/source/jcl/v1
 $ javac Dep.java
 $ cd ~/source/jcl/v2
@@ -944,13 +971,11 @@ ClassLoader 固然可以解决依赖冲突问题，不过它也限制了不同�
 
 #### 分工与合作
 
-
-
 这里我们重新理解一下 ClassLoader 的意义，它相当于类的命名空间，起到了类隔离的作用。位于同一个 ClassLoader 里面的类名是唯一的，不同的 ClassLoader 可以持有同名的类。ClassLoader 是类名称的容器，是类的沙箱。
 
 
 
-![image](Java.assets/v2-354fd6b023feddff14f90b0eeb8181aa_720w.jpg)
+![image](Java.assets/v2-354fd6b023feddff14f90b0eeb8181aa_720w.jpg)		
 
 
 
@@ -1058,7 +1083,7 @@ Exception in thread "main" java.lang.NoSuchMethodException: com.xxx.expert.refle
 
 
 
-> 访问权限
+> 安全检查
 
 setAccessible
 
@@ -2010,9 +2035,7 @@ countDownLatch.await(); // 等待计数器归零，然后再向下执行
 
 
 
-```java
 
-```
 
 
 
@@ -2028,9 +2051,7 @@ countDownLatch.await(); // 等待计数器归零，然后再向下执行
 
 例子：抢车位，6辆车抢3个停车位。
 
-```java
 
-```
 
 **原理：**
 semaphore.acquire() 获得，假设如果已经满了，等待，等待被释放为止！  
@@ -2148,7 +2169,7 @@ JVM 在运行时就是操作系统的一个进程实例。
 
 
 
-```
+```java
 public class Test {
     public static void main(String[] args) throws IOException {
         A a = new A();
