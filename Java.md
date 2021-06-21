@@ -1,3 +1,30 @@
+
+
+
+
+# 枚举
+
+
+
+特点
+
+* 安全 —— 反射不能调用其构造方法，适用于 单例 场景
+
+
+
+示例
+
+```java
+enum Color 
+{ 
+    RED, GREEN, BLUE; 
+}
+```
+
+
+
+
+
 # 集合
 
 
@@ -8,11 +35,7 @@
 
 ## Queue 接口
 
-
-
 AbstractQueue 抽象类：为类库实现者设计，要比直接实现 Queue 会方便许多
-
-
 
 底层支持数组和链表两种数据结构
 
@@ -26,19 +49,13 @@ AbstractQueue 抽象类：为类库实现者设计，要比直接实现 Queue �
 
 ## Collection接口
 
-
-
 Collection 是 Queue 的父接口
 
 
 
 ## Iterator接口
 
-
-
 Collection 中包含 Iterator 接口
-
-
 
 ```
 public static void main(String[] args) {
@@ -53,13 +70,11 @@ public static void main(String[] args) {
 
 ## List 接口
 
-
-
 List 是一个有序集合。元 素会增加到容器中的特定位置。可以采用两种方式访问元素：使用迭代器访问， 或者使用一个整数索引来访问。后一种方法称为随机访问（ random access), 因为这样可以按任意顺序访问元素。与之不同， 使用迭代器访问时，必须顺序地访问元素。
 
 
 
-![image](Java.assets/image-20210608121507933.png)
+![image](Java.assets/image-20210608121507933.png)	
 
 
 
@@ -69,13 +84,11 @@ List 是一个有序集合。元 素会增加到容器中的特定位置。可�
 
 
 
-![image](Java.assets/image-20210608122234999.png)
+![image](Java.assets/image-20210608122234999.png)	
 
 
 
 ### hashCode 和 equals
-
-
 
 若重写了 equals 方法，则必须重写hashCode。避免语义不一致。在 Set 和 Map 中都依赖 hashcode 和 equals 判断是否为相同的对象和key。
 
@@ -83,39 +96,25 @@ List 是一个有序集合。元 素会增加到容器中的特定位置。可�
 
 ## Map 接口
 
-
-
 遍历：
-
-
 
 JDK 8 后，推荐使用  Map.foreach ；低版本建议用 entrySet，其中 keySet 内部遍历了2次有性能问题
 
 
 
-![image](Java.assets/image-20210608214843648.png)
+![image](Java.assets/image-20210608214843648.png)	
 
 
 
 ### HashMap
 
-
-
 数据结构：数组 + 红黑树（早期是链表）
-
-
 
 时间复杂度 O(1) ——why ？
 
-
-
 > HashMap 在工作中怎么用
 
-
-
 HashMap 的构造函数中有两个参数，加载因子（0.75） 和 初始容量（16）
-
-
 
 （TODO）看下狂神的博客
 
@@ -131,15 +130,9 @@ HashMap 的构造函数中有两个参数，加载因子（0.75） 和 初始容
 
 ### WeakHashMap
 
-
-
 map 的key 是弱引用，且有队列维护，将失效 key 的 entries 自动移除。
 
-
-
 使用时把 key 置空
-
-
 
 一般用于中间件的开发中。
 
@@ -147,11 +140,7 @@ map 的key 是弱引用，且有队列维护，将失效 key 的 entries 自动�
 
 ### HashSet
 
-
-
 > HashSet 的实现原理
-
-
 
 ```
 public HashSet() {
@@ -163,11 +152,7 @@ public HashSet() {
 
 ### Comparator
 
-
-
 场景：
-
-
 
 - 排序
 - 分组
@@ -176,11 +161,7 @@ public HashSet() {
 
 ### 遍历
 
-
-
 特征
-
-
 
 - 有序性(sort)：有序性是指遍历的结果是按某种比较规则依次排列的
 - 稳定性(order)  ：稳定性指集合每次遍历的元素次序是一定的
@@ -193,43 +174,38 @@ public HashSet() {
 
 # 泛型
 
+特点
 
-
-泛型提供了编译时类型安全检测机制，在JDK1.5引入。
-
-
-
-泛型可以省略吗
+* 适用于编译阶段 for  javac
+* 类型安全 —— 数据的安全性？免去强制类型转换？？
 
 
 
-![image](Java.assets/image-20210605120053956.png)
+> 那反射操作泛型的场景是什么？？
+
+
+
+
+
+> 泛型可以省略吗
+
+![image](Java.assets/image-20210605120053956.png)	
 
 
 
 调用泛型方法，通常参数可以推断，不需要加；此外，因为类型擦除的缘故，编译器可以简单地把所有参数都推断为 Object。
 
-
-
 定义泛型类的实例，不加应该是默认 Object，但我不确定。由于类型擦除的缘故，下面这个是正确的：
-
-
 
 G g = new G();
 
-
-
 说到底，这个问题并不重要，因为 Java 的泛型参数是擦除的。如果你不确定，可以选择加或者不加，然后尝试编译，或者看 IDE 提示。
-
-
 
 写List和Map时，我们习惯这样写：
 
 List notssourlList1 = new ArrayList<>();
 
 在我本地跑没有问题（本地jdk1.8），但是到了测试那边，居然在服务器启动时，直接报错，连编译都没过
-
-
 
 最后发现，jdk6是不支持泛型的省略的，要1.8以上的版本才ok
 
@@ -241,15 +217,9 @@ List notssourlList1 = new ArrayList<>();
 
 ## 通配符
 
-
-
 T，E，K，V，？
 
-
-
 约定俗成的用法
-
-
 
 - ？ 表示不确定的 java 类型
 - T (type) 表示具体的一个java类型
@@ -260,15 +230,9 @@ T，E，K，V，？
 
 ## ？无界通配符
 
-
-
 先看例子：
 
-
-
 我有一个父类 Animal 和几个子类，如狗、猫等，现在我需要一个动物的列表，我的第一个想法是像这样的：
-
-
 
 ```
 List<Animal> listAnimals
@@ -278,8 +242,6 @@ List<Animal> listAnimals
 
 但是老板的想法确实这样的：
 
-
-
 ```
 List<? extends Animal> listAnimals
 ```
@@ -287,8 +249,6 @@ List<? extends Animal> listAnimals
 
 
 为什么要使用通配符而不是简单的泛型呢？通配符其实在声明局部变量时是没有什么意义的，但是当你为一个方法声明一个参数时，它是非常重要的。
-
-
 
 ```
 static int countLegs (List<? extends Animal > animals ) {
@@ -326,15 +286,9 @@ public static void main(String[] args) {
 
 ## 上限通配符 <? extend E>
 
-
-
 限定了父类及其子类
 
-
-
 好处是
-
-
 
 - 编译安全性，如果传入的类型不是 E 或者 E 的子类，编译不成功
 - （与简单泛型比较）方法通用性，避免了 E 子类要使用得先强转成 E 的麻烦
@@ -343,11 +297,7 @@ public static void main(String[] args) {
 
 ## 下限通配符 <? super E>
 
-
-
 用 super 进行声明，表示参数化的类型可能是所指定的类型，或者是此类型的父类型，直至 Object
-
-
 
 ```
 private <T> void test(List<? super T> dst, List<T> src){
@@ -371,30 +321,18 @@ class Dog extends Animal {
 
 ## ？ 和 T 的区别
 
-
-
 T 是一个 确定的 类型，通常用于泛型类和泛型方法的定义，？是一个 不确定 的类型，通常用于泛型方法的调用代码和形参，不能用于定义类和泛型方法。
-
-
 
 区别
 
-
-
 - 通过 类型参数（T）来确保泛型参数的一致性
 - 类型参数（T）可以多重限定而通配符不行
-
-
 
 ```
 <T extends InterfaceA & InterfaceB>
 ```
 
-
-
 - 通配符（？）可以使用超类限定而类型参数（T）不行
-
-
 
 ```
 // 类型参数T
@@ -409,23 +347,15 @@ T extends A
 
 ## Class< T >
 
-
-
 ```
 // 通过反射的方式生成  multiLimit 
 // 对象，这里比较明显的是，我们需要使用强制类型转换
 MultiLimit multiLimit = (MultiLimit)Class.forName("com.glmapper.bridge.boot.generic.MultiLimit").newInstance();
 ```
 
-
-
 对于上述代码，在运行期，如果反射的类型不是 MultiLimit 类，那么一定会报 java.lang.ClassCastException 错误。
 
-
-
 对于这种情况，则可以使用下面的代码来代替，使得在在编译期就能直接 检查到类型的问题：
-
-
 
 ```
 public class Test01 {
@@ -447,11 +377,7 @@ class B{}
 
 ## Class< T > 和 Class< ? > 区别
 
-
-
 `Class<T>` 在实例化的时候，T 要替换成具体类。`Class<?>` 它是个通配泛型，? 可以代表任何类型，所以主要用于声明时的限制情况。比如，我们可以这样做申明：
-
-
 
 ```
 // 可以
@@ -464,11 +390,7 @@ public Class<T> clazzT;
 
 ## PECS法则
 
-
-
 PECS法则：生产者（Producer）使用extends，消费者（Consumer）使用super
-
-
 
 "PECS" is from the collection's point of view. If you are *only* pulling items from a generic collection, it is a producer and you should use `extends`; if you are *only* stuffing items in, it is a consumer and you should use `super`. If you do both with the same collection, you shouldn't use either `extends` or `super`.
 
@@ -476,46 +398,7 @@ PECS法则：生产者（Producer）使用extends，消费者（Consumer）使�
 
 > 为什么要引入泛型通配符？
 
-
-
 为了保证类型安全
-
-
-
-
-
-
-
-
-
-# IO
-
-|          | InputStream/OutputStream | Reader/Writer |
-| -------- | ------------------------ | ------------- |
-| 数据类型 | 字节流                   | 字符流        |
-| 类类型   | 抽象类                   | 抽象类        |
-
-
-
-
-
-
-
-
-
-# 网络
-
-TCP/IP 在 Java 中对应 Socket 类
-
-Socket 底层是 native 方法，是由操作系统实现的
-
-## 序列化
-
-序列化：将对象在内存存中的状态转成字节码，用于数据传输。
-
-反序列化：接收方可以恢复对象状态到内存中。
-
-
 
 
 
@@ -543,10 +426,6 @@ class outerClass {
     };
 }
 ```
-
-
-
-## 继承父类
 
 
 
@@ -580,8 +459,6 @@ new Thread(new Runnable(){
 
 > JDK8中为了加强接口的能力，使得接口可以存在具体的方法，前提是方法需要被default或static关键字所修饰。这样做的好处是接口的每个实现类如果都想要相同的功能，就不需要重复代码，而是在接口进行定义即可。默认方法在子类也可以被重写
 
-
-
 - 定义类时，默认修饰符
 
 | 位置           | private | default（默认） | protected | public |
@@ -603,13 +480,7 @@ new Thread(new Runnable(){
 
 
 
-## static
-
-
-
-### static 类型
-
-
+## static 类型
 
 1. static变量
 2. static方法
@@ -621,19 +492,13 @@ new Thread(new Runnable(){
 
 static修饰的变量、方法、代码块、内部类在类加载期间就已经完成初始化，存储在Java Heap（JDK7.0之前存储在方法区）中静态存储区，因此static优于对象而存在。
 
-
-
 static修饰的成员（变量、方法）被所有对象所共享，也叫静态变量或静态方法，可直接通过类调用（也建议通过类调用）。
 
 
 
 > static 的滥用场景
 
-
-
 静态代码块常用的有三种
-
-
 
 - 构造代码块（初始化块）在类中方法外出现
 
@@ -655,10 +520,6 @@ static修饰的成员（变量、方法）被所有对象所共享，也叫静�
 
 
 
-
-
-
-
 # 类对象
 
 *参考 java-demo 的 com.xxx.expert.clazz*
@@ -675,8 +536,6 @@ static修饰的成员（变量、方法）被所有对象所共享，也叫静�
 * 初始化
     * 
 
-
-
 加载类的时机
 
 
@@ -685,7 +544,8 @@ static修饰的成员（变量、方法）被所有对象所共享，也叫静�
 
 主动引用
 
-* Class.forName('完成类名:包路径+类名')
+* Class.forName('完成类名:包路径+类名') 
+    * 应用场景：传参构造，更加灵活
 * 访问静态变量
 
 
@@ -694,8 +554,6 @@ static修饰的成员（变量、方法）被所有对象所共享，也叫静�
 
 * 访问父类的静态变量
 * 访问常量
-
-
 
 
 
@@ -729,7 +587,7 @@ static修饰的成员（变量、方法）被所有对象所共享，也叫静�
 
 
 
-![image](Java.assets/v2-a0cacd578df9f00e486f3f34ed77a9f2_720w.jpg)
+![image](Java.assets/v2-a0cacd578df9f00e486f3f34ed77a9f2_720w.jpg)	
 
 
 
@@ -760,11 +618,7 @@ class Class<T> {
 
 > 延迟加载
 
-
-
 JVM 运行并不是一次性加载所需要的全部类的，它是按需加载，也就是延迟加载。程序在运行的过程中会逐渐遇到很多不认识的新类，这时候就会调用 ClassLoader 来加载这些类。加载完成后就会将 Class 对象存在 ClassLoader 里面，下次就不需要重新加载了。
-
-
 
 比如你在调用某个类的静态方法时，首先这个类肯定是需要被加载的，但是并不会触及这个类的实例字段，那么实例字段的类别 Class 就可以暂时不必去加载，但是它可能会加载静态字段相关的类别，因为静态方法会访问静态字段。而实例字段的类别需要等到你实例化对象的时候才可能会加载。
 
@@ -772,25 +626,15 @@ JVM 运行并不是一次性加载所需要的全部类的，它是按需加载�
 
 #### 环境变量
 
-
-
 了解了.class文件后，我们再来思考下，我们自己编写的各种类是如何被加载到jvm(java虚拟机)中去的。
-
-
 
 Window平台上的环境变量，主要有3个：JAVA_HOME、PATH、CLASSPATH
 
-
-
 > classPath
-
-
 
 ```
 CLASSPATH=.;%JAVA_HOME%\lib;%JAVA_HOME%\lib\tools.jar
 ```
-
-
 
 指向jar包路径（以分号分割），需要注意最前面的 `.`表示当前目录
 
@@ -798,11 +642,7 @@ CLASSPATH=.;%JAVA_HOME%\lib;%JAVA_HOME%\lib\tools.jar
 
 #### 类加载流程
 
-
-
 ClassLoader 类型
-
-
 
 - BootstrapClassLoader
 - ExtensionClassLoader
@@ -846,17 +686,9 @@ AppClassLoader 可以由 ClassLoader 类提供的静态方法 getSystemClassLoad
 
 程序在运行过程中，遇到了一个未知的类，它会选择哪个 ClassLoader 来加载它呢？虚拟机的策略是使用调用者 Class 对象的 ClassLoader 来加载当前未知的类。何为调用者 Class 对象？就是在遇到这个未知的类时，虚拟机肯定正在运行一个方法调用（静态方法或者实例方法），这个方法挂在哪个类上面，那这个类就是调用者 Class 对象。前面我们提到每个 Class 对象里面都有一个 classLoader 属性记录了当前的类是由谁来加载的。
 
-
-
 因为 ClassLoader 的传递性，所有延迟加载的类都会由初始调用 main 方法的这个 ClassLoader 全全负责，它就是 AppClassLoader。
 
-
-
-
-
-
-
-前面我们提到 AppClassLoader 只负责加载 Classpath 下面的类库，如果遇到没有加载的系统类库怎么办，AppClassLoader 必须将系统类库的加载工作交给 BootstrapClassLoader 和 ExtensionClassLoader 来做，这就是我们常说的「双亲委派」。
+前面我们提到AppClassLoader 只负责加载 Classpath 下面的类库，如果遇到没有加载的系统类库怎么办，AppClassLoader 必须将系统类库的加载工作交给 BootstrapClassLoader 和 ExtensionClassLoader 来做，这就是我们常说的「双亲委派」。
 
 
 
@@ -866,11 +698,7 @@ AppClassLoader 可以由 ClassLoader 类提供的静态方法 getSystemClassLoad
 
 AppClassLoader 在加载一个未知的类名时，它并不是立即去搜寻 Classpath，它会首先将这个类名称交给 ExtensionClassLoader 来加载，如果 ExtensionClassLoader 可以加载，那么 AppClassLoader 就不用麻烦了。否则它就会搜索 Classpath 。
 
-
-
 而 ExtensionClassLoader 在加载一个未知的类名时，它也并不是立即搜寻 ext 路径，它会首先将类名称交给 BootstrapClassLoader 来加载，如果 BootstrapClassLoader 可以加载，那么 ExtensionClassLoader 也就不用麻烦了。否则它就会搜索 ext 路径下的 jar 包。
-
-
 
 这三个 ClassLoader 之间形成了级联的父子关系，每个 ClassLoader 都很懒，尽量把工作交给父亲做，父亲干不了了自己才会干。每个 ClassLoader 对象内部都会有一个 parent 属性指向它的父加载器。
 
@@ -890,27 +718,17 @@ class ClassLoader {
 
 
 
-![image](Java.assets/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTcwMjExMTEyNzU0MTk3)
-
 
 
 #### Class.forName
 
-
-
 当我们在使用 jdbc 驱动时，经常会使用 Class.forName 方法来动态加载驱动类。
-
-
 
 ```
 Class.forName("com.mysql.cj.jdbc.Driver");
 ```
 
-
-
 其原理是 mysql 驱动的 Driver 类里有一个静态代码块，它会在 Driver 类被加载的时候执行。这个静态代码块会将 mysql 驱动实例注册到全局的 jdbc 驱动管理器里。
-
-
 
 ```
 class Driver {
@@ -929,13 +747,9 @@ class Driver {
 
 forName 方法同样也是使用调用者 Class 对象的 ClassLoader 来加载目标类。不过 forName 还提供了多参数版本，可以指定使用哪个 ClassLoader 来加载
 
-
-
 ```
 Class<?> forName(String name, boolean initialize, ClassLoader cl)
 ```
-
-
 
 通过这种形式的 forName 方法可以突破内置加载器的限制，通过使用自定类加载器允许我们自由加载其它任意来源的类库。根据 ClassLoader 的传递性，目标类库传递引用到的其它类库也将会使用自定义加载器加载。
 
@@ -943,11 +757,7 @@ Class<?> forName(String name, boolean initialize, ClassLoader cl)
 
 #### 自定义加载器
 
-
-
 ClassLoader 里面有三个重要的方法 loadClass()、findClass() 和 defineClass()。
-
-
 
 loadClass() 方法是加载目标类的入口，它首先会查找当前 ClassLoader 以及它的双亲里面是否已经加载了目标类，如果没有找到就会让双亲尝试加载，如果双亲都加载不了，就会调用 findClass() 让自定义加载器自己来加载目标类。ClassLoader 的 findClass() 方法是需要子类来覆盖的，不同的加载器将使用不同的逻辑来获取目标类的字节码。拿到这个字节码之后再调用 defineClass() 方法将字节码转换成 Class 对象。下面我使用伪代码表示一下基本过程
 
@@ -997,14 +807,10 @@ class CustomClassLoader extends ClassLoader {
 
 自定义类加载器不易破坏双亲委派规则，不要轻易覆盖 loadClass 方法。否则可能会导致自定义加载器无法加载内置的核心类库。在使用自定义加载器时，要明确好它的父加载器是谁，将父加载器通过子类的构造器传入。如果父类加载器是 null，那就表示父加载器是「根加载器」。
 
-
-
 ```
 // ClassLoader 构造器
 protected ClassLoader(String name, ClassLoader parent);
 ```
-
-
 
 双亲委派规则可能会变成三亲委派，四亲委派，取决于你使用的父加载器是谁，它会一直递归委派到根加载器。
 
@@ -1042,7 +848,7 @@ Exception in thread "main" java.lang.ClassNotFoundException: [I
 
 
 
-![image](Java.assets/v2-7a471cc06fd74bb65984647dbe621a8f_720w.jpg)
+![image](Java.assets/v2-7a471cc06fd74bb65984647dbe621a8f_720w.jpg)	
 
 
 
@@ -1180,8 +986,6 @@ class Thread {
 
 contextClassLoader「线程上下文类加载器」，这究竟是什么东西？
 
-
-
 首先 contextClassLoader 是那种需要显示使用的类加载器，如果你没有显示使用它，也就永远不会在任何地方用到它。你可以使用下面这种方式来显示使用它
 
 
@@ -1190,47 +994,25 @@ contextClassLoader「线程上下文类加载器」，这究竟是什么东西�
 Thread.currentThread().getContextClassLoader().loadClass(name);
 ```
 
-
-
 这意味着如果你使用 forName(string name) 方法加载目标类，它不会自动使用 contextClassLoader。那些因为代码上的依赖关系而懒惰加载的类也不会自动使用 contextClassLoader来加载。
-
-
 
 其次线程的 contextClassLoader 是从父线程那里继承过来的，所谓父线程就是创建了当前线程的线程。程序启动时的 main 线程的 contextClassLoader 就是 AppClassLoader。这意味着如果没有人工去设置，那么所有的线程的 contextClassLoader 都是 AppClassLoader。
 
-
-
 那这个 contextClassLoader 究竟是做什么用的？我们要使用前面提到了类加载器分工与合作的原理来解释它的用途。
-
-
 
 它可以做到跨线程共享类，只要它们共享同一个 contextClassLoader。父子线程之间会自动传递 contextClassLoader，所以共享起来将是自动化的。
 
-
-
 如果不同的线程使用不同的 contextClassLoader，那么不同的线程使用的类就可以隔离开来。
-
-
 
 如果我们对业务进行划分，不同的业务使用不同的线程池，线程池内部共享同一个 contextClassLoader，线程池之间使用不同的 contextClassLoader，就可以很好的起到隔离保护的作用，避免类版本冲突。
 
-
-
 如果我们不去定制 contextClassLoader，那么所有的线程将会默认使用 AppClassLoader，所有的类都将会是共享的。
 
-
-
 线程的 contextClassLoader 使用场合比较罕见，如果上面的逻辑晦涩难懂也不必过于计较。
-
-
 
 JDK9 增加了模块功能之后对类加载器的结构设计做了一定程度的修改，不过类加载器的原理还是类似的，作为类的容器，它起到类隔离的作用，同时还需要依靠双亲委派机制来建立不同的类加载器之间的合作关系。
 
 
-
-
-
-# 
 
 
 
@@ -1254,11 +1036,45 @@ JDK9 增加了模块功能之后对类加载器的结构设计做了一定程度
 
 *依赖注解、Class对象、ClassLoader的知识*
 
+ 
+
+> 基础类型对应表
+
+| Class         | Output                  |
+| ------------- | ----------------------- |
+| Integer.TYPE  | int                     |
+| Integer.class | class java.lang.Integer |
+|               |                         |
+
+遇到过如下错误
+
+```java
+Exception in thread "main" java.lang.NoSuchMethodException: com.xxx.expert.reflect.User.<init>(java.lang.Integer, java.lang.String, java.lang.Integer)
+```
+
+错误原因是反射类型不匹配，找不到对应的方法。Integer.TYPE 与 Integer.class 没有匹配正确。
 
 
 
 
 
+> 访问权限
+
+setAccessible
+
+```java
+Exception in thread "main" java.lang.IllegalAccessException: Class com.xxx.expert.reflect.T04_Practice can not access a member of class com.xxx.expert.reflect.User with modifiers "private"
+```
+
+错误原因是 private 默认没有访问权限，需要开启 .setAccessible(true);
+
+
+
+> 性能对比
+
+setAccessible
+
+.setAccessible(true) 表示关闭安全检测，关闭情况下，执行速度要比默认反射方式快至少 2 倍；比普通执行要慢数百倍！
 
 
 
@@ -1285,6 +1101,35 @@ fork 表示拆分，join 表示合并
 
 - 递归分治：
 - 工作密取：在并行计算中，先完成的线程可以从其他线程队列中窃取任务来执行
+
+
+
+
+
+# IO
+
+|          | InputStream/OutputStream | Reader/Writer |
+| -------- | ------------------------ | ------------- |
+| 数据类型 | 字节流                   | 字符流        |
+| 类类型   | 抽象类                   | 抽象类        |
+
+
+
+
+
+# 网络
+
+TCP/IP 在 Java 中对应 Socket 类
+
+Socket 底层是 native 方法，是由操作系统实现的
+
+## 序列化
+
+序列化：将对象在内存存中的状态转成字节码，用于数据传输。
+
+反序列化：接收方可以恢复对象状态到内存中。
+
+
 
 
 
@@ -2603,5 +2448,4 @@ java9及以后，就停止使用java VisualVM了，改用Graal VisualVM了。
 
 
 ## 高并发调优
-
 
