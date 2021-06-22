@@ -2,17 +2,17 @@
 
 # 参考
 
-*官方文档是最好的学习资料*
+*官方文档是最好的学习资料，（chrome直接翻译成中文看！再结合阅读插件提升阅读体验）*
 
 
 
-官方：https://www.oracle.com/cn/java/technologies/javase/8-whats-new.html
+JVM：https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-2.html 
 
-官方英文：https://www.oracle.com/java/technologies/javase/8-whats-new.html
+
 
 在线api：https://www.oracle.com/cn/java/technologies/java-se-api-doc.html
 
-javase：https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-2.html （chrome直接翻译成中文看！再结合阅读插件提升阅读体验）
+
 
 官方：
 
@@ -26,13 +26,21 @@ https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-2.html
 
 * JDK 5
     * 泛型
+    
 * JDK 7
+
 * JDK 8
-    * Stream
+
+    官方：https://www.oracle.com/cn/java/technologies/javase/8-whats-new.html
+
+    官方英文：https://www.oracle.com/java/technologies/javase/8-whats-new.html
 
 * JDK 9
+
 * JDK 10
+
 * JDK 11
+
 * JDK 12
 
 

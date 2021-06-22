@@ -1,3 +1,198 @@
+*书山有路勤为径，学海无涯苦作舟*
+
+
+
+
+
+# 数据类型
+
+## 引用类型
+
+> 四种类型：强软弱虚
+
+- 强引用。直接`new`
+- 软引用。通过`SoftReference`创建，在内存空间不足的时候直接销毁，即它可能最后的销毁地点是在老年区
+- 弱引用。通过`WeakReference`创建，在`GC`的时候直接销毁。即其销毁地点必定为伊甸区
+- 虚引用。通过`PhantomReference`创建，它和不存也一样，**「非常虚，只能通过引用队列在进行一些操作，主要用于堆外内存回收」**
+
+
+
+### 强引用
+
+谈到引用就就必须要谈到 GC。
+
+我们在堆中创建对象，GC 回收没有引用指向的对象，这里的引用是指强引用（注意现在要认识到引用有四种类型）。对象被回收时，会执行对象的 finalize 方法（JDK8 后的版本中已被 deprecated）
+
+
+
+```java
+public class Test {
+    public static void main(String[] args) throws IOException {
+        A a = new A();
+        a = null;
+        System.gc(); // 仅是提醒虚拟机，希望进行一次垃圾回收
+        System.out.println(a);
+        System.in.read(); // 阻塞main线程，给gc释放的时间
+    }
+}
+
+class A {
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        System.out.println("finalize");
+    }
+}
+
+/** 执行结果：
+null
+finalize
+*/
+```
+
+
+
+上述程序
+
+- gc 是单独的线程，所以打印的顺序不能保证
+- 执行System.gc()函数的作用只是提醒或告诉虚拟机，希望进行一次垃圾回收。
+    至于什么时候进行回收还是取决于虚拟机，而且也不能保证一定进行回收（如果-XX:+DisableExplicitGC设置成true，则不会进行回收）。
+
+
+
+### 软引用
+
+Soft Reference
+
+```java
+public class Test_SoftReference {
+    public static void main(String[] args) throws InterruptedException {
+        SoftReference m = new SoftReference<>(new byte[1024 * 1024 * 10]);
+        System.out.println(m.get());
+        System.gc();
+//        TimeUnit.SECONDS.sleep(5);
+//        System.out.println(m.get());
+
+        byte[] b = new byte[1024 * 1024 * 12];
+        System.out.println(m.get());
+    }
+}
+```
+
+
+
+设置 heap 空间为 20M，VM options `-Xmx20M`，执行结果为
+
+```java
+[B@4554617c[B@4554617cnull
+```
+
+
+
+程序解读 heap 空间20M，软引用指向的字节数组占了 10M，当再创建12M的空间时，内存不够，所以GC 会把软引用干掉。
+
+
+
+> 应用场景
+
+适合缓存使用
+
+*一些看起来冷门的知识是一些性能框架的基础*
+
+
+
+### 弱引用
+
+```java
+public class Test03_WeakReference {
+    public static void main(String[] args) throws InterruptedException {
+        WeakReference m = new WeakReference<>(new byte[1024]);
+        System.out.println(m.get());
+        System.gc();
+        TimeUnit.SECONDS.sleep(2);
+        System.out.println(m.get());
+    }
+}
+/** 执行结果：
+[B@4554617c
+null
+*/
+```
+
+
+
+> 应用场景
+
+用在ThreadLocal 的实现上。
+
+在以往我们使用完对象以后等着`GC`清理，但是对于`ThreadLocal`来说，即使我们使用结束，也会因为线程本身存在该对象的引用，处于对象可达状态，垃圾回收器无法回收。这个时候当`ThreadLocal`太多的时候就会出现内存泄漏的问题。
+
+而我们将`ThreadLocal`对象的引用作为弱引用，那么就很好的解决了这个问题。当我们自己使用完`ThreadLocal`以后，**「当**`**GC**`**的时候就会将我们创建的强引用直接干掉，而这个时候我们完全可以将线程**`**Map**`**中的引用干掉，于是使用了弱引用」**
+
+
+
+### 虚引用
+
+```java
+public class Test04_PhantomReference {
+    private static final List<Object> LIST = new LinkedList<>();
+    private static final ReferenceQueue<M> QUEUE = new ReferenceQueue();
+
+    public static void main(String[] args) throws InterruptedException {
+        PhantomReference<M> m = new PhantomReference<>(new M(), QUEUE);
+        System.out.println(m.get());
+        // 分配到 JVM 内存空间
+        ByteBuffer b = ByteBuffer.allocate(1024);
+        // 直接分配到 OS 内存空间，也叫直接内存
+        //ByteBuffer b = ByteBuffer.allocateDirect(1024);
+        new Thread(()->{
+            while (true) {
+                LIST.add(new byte[1024 * 1024]);
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                System.out.println(m.get());
+            }
+        }).start();
+        new Thread(()->{
+            while (true) {
+                Reference<? extends  M> poll = QUEUE.poll();
+                if (poll != null) {
+                    System.out.println("--- 虚引用对象被 jvm 回收了--- " + poll);
+                }
+            }
+        }).start();
+
+        TimeUnit.SECONDS.sleep(1);
+    }
+}
+```
+
+
+
+> 场景
+
+NIO 的管理直接内存
+
+先了解下网络编程：ByteBuffer 一般用于网络编程，网卡将接收到的数据先放到 OS 中，然后 OS 会拷贝到 JVM 中，这种拷贝很频繁，在 JDK 1.5 后，提出了直接内存，省去了拷贝。具体参考 NIO 的 zero copy 零拷贝。现在的网络框架使用的都是直接内存。
+
+```java
+// 分配到 JVM 内存空间，堆内存
+ByteBuffer b = ByteBuffer.allocate(1024);
+// 直接分配到 OS 内存空间，也叫直接内存（JVM堆外内存）
+ByteBuffer b = ByteBuffer.allocateDirect(1024);
+```
+
+
+
+虚引用（看源码）指向了直接内存，并将对象的状态维护在事件队列中
+
+- 对象 finalize 时，将信息维护在事件队列中？？
+
+GC 是 C++ 程序，可以管理内存。正常的只管理 JVM 中的内存，当发现有虚引用事件队列时，会开启另外的线程去管理操作系统的内存，即直接内存。
+
 
 
 # 关键字
@@ -9,8 +204,6 @@
 
 
 # 枚举
-
-
 
 特点
 
@@ -556,14 +749,17 @@ static修饰的成员（变量、方法）被所有对象所共享，也叫静�
 
 ## 类加载的执行过程
 
-* 加载
+* 加载（类）
     * 加载到内存生成类对象 - ClassLoader 将字节码生成 Class 对象
-* 链接
+* 链接（类）
     * 验证
-    * ？：静态变量、常量
-* 初始化
+    * 准备：静态变量
+    * 解析：常量
+* 初始化（类）
+    * clinit 合并静态赋值语句
+    * 有父类，则先初始化父类
 
-加载类的时机
+
 
 
 
@@ -2138,236 +2334,329 @@ public class Test01_DistributedTransaction {
 
 # JVM
 
-JVM 在运行时就是操作系统的一个进程实例。
+JVM 在运行时就是操作系统的一个进程实例。每个Java进程都有自己的 JVM 实例。
 
 
 
-## 引用类型
+## 引导
 
+* 请你谈谈你对JVM的理解？java8虚拟机和之前的变化更新？
 
+* 什么是 OOM，什么是 StackOverFlow ？怎么分析？
 
-> 四种类型：强软弱虚
+* JVM常用调优参数有哪些？
 
+* 内存快照如何抓取？怎么分析 Dump 文件？
 
+* 谈谈JVM中，类加载你的认识？
 
-- 强引用。直接`new`
-- 软引用。通过`SoftReference`创建，在内存空间不足的时候直接销毁，即它可能最后的销毁地点是在老年区
-- 弱引用。通过`WeakReference`创建，在`GC`的时候直接销毁。即其销毁地点必定为伊甸区
-- 虚引用。通过`PhantomReference`创建，它和不存也一样，**「非常虚，只能通过引用队列在进行一些操作，主要用于堆外内存回收」**
+* Java 是编译型语言还是解释型语言？
 
+    介绍两者的定义；阐述java的执行机制
 
 
-### 强引用
 
+## JVM的位置
 
+JRE 包含 JVM，具体是什么 ==TODO==
 
-谈到引用就就必须要谈到 GC。
 
 
+## JVM的体系结构
 
-我们在堆中创建对象，GC 回收没有引用指向的对象，这里的引用是指强引用（注意现在要认识到引用有四种类型）。对象被回收时，会执行对象的 finalize 方法（JDK8 后的版本中已被 deprecated）
+![image-20210622121116492](Java.assets/image-20210622121116492.png)	
 
 
 
-```java
-public class Test {
-    public static void main(String[] args) throws IOException {
-        A a = new A();
-        a = null;
-        System.gc(); // 仅是提醒虚拟机，希望进行一次垃圾回收
-        System.out.println(a);
-        System.in.read(); // 阻塞main线程，给gc释放的时间
-    }
-}
+## 类加载器
 
-class A {
-    @Override
-    protected void finalize() throws Throwable {
-        super.finalize();
-        System.out.println("finalize");
-    }
-}
+1. 虚拟机自带的加载器
 
-/** 执行结果：
-null
-finalize
-*/
-```
+2. Bootstrap 启动类加载器  /lib/rt.jar，在 Java 中返回 null，因为是由 C、C++实现的
 
+3. Extend 扩展类加载器 /lib/ext
 
+4. App 应用类加载器 
 
-上述程序
 
 
+### class 文件
 
-- gc 是单独的线程，所以打印的顺序不能保证
-- 执行System.gc()函数的作用只是提醒或告诉虚拟机，希望进行一次垃圾回收。
-    至于什么时候进行回收还是取决于虚拟机，而且也不能保证一定进行回收（如果-XX:+DisableExplicitGC设置成true，则不会进行回收）。
+查看class 文件
 
+*  `javap -verbose  xxx.class` 
 
+* vscode 安装插件 hexdump，以16位进制查看
 
-### 软引用
 
 
+### 双亲委派机制
 
-Soft Reference
+1. 加载器收到类加载请求
+2. 将请求向上委托给父类加载器去完成，一直往上委托，直到启动类加载器
+3. 启动类加载器检查是否能加载当前这个类，能加载就结束，使用当前的加载器；否则抛出异常，通知子加载器进行加载
+4. 重复步骤 3
 
+如果都找不到，则会抛出 Class Not Found 
 
 
-```java
-public class Test_SoftReference {
-    public static void main(String[] args) throws InterruptedException {
-        SoftReference m = new SoftReference<>(new byte[1024 * 1024 * 10]);
-        System.out.println(m.get());
-        System.gc();
-//        TimeUnit.SECONDS.sleep(5);
-//        System.out.println(m.get());
 
-        byte[] b = new byte[1024 * 1024 * 12];
-        System.out.println(m.get());
-    }
-}
-```
+## 沙箱安全机制
 
+将Java代码限定在JVM特定的运行范围中，并且严格限制代码对本地系统资源访问。
 
+系统资源包括：CPU、内存、文件系统、网络。
 
-设置 heap 空间为 20M，VM options `-Xmx20M`，执行结果为
 
 
+域：domain，每个域对应不同的权限
 
-```java
-[B@4554617c[B@4554617cnull
-```
+![image-20210622145856639](Java.assets/image-20210622145856639.png)	
 
 
 
-程序解读 heap 空间20M，软引用指向的字节数组占了 10M，当再创建12M的空间时，内存不够，所以GC 会把软引用干掉。
+### 组成部分
 
 
 
-> 应用场景
+* 字节码校验器
+* 类加载器
+* 
 
 
 
-适合缓存使用
 
 
+## Native
 
-*一些看起来冷门的知识是一些性能框架的基础*
+> JNI 历史
 
+Java 诞生初期，为了扩展 Java 的使用，融合不同编程语言为 Java 所用
 
 
-### 弱引用
 
+首先标记了 Native 的方法，是 Java 自身无法执行，需要调用操作系统的方法库去实现
 
 
-```java
-public class Test03_WeakReference {
-    public static void main(String[] args) throws InterruptedException {
-        WeakReference m = new WeakReference<>(new byte[1024]);
-        System.out.println(m.get());
-        System.gc();
-        TimeUnit.SECONDS.sleep(2);
-        System.out.println(m.get());
-    }
-}
-/** 执行结果：
-[B@4554617c
-null
-*/
-```
 
+Java 在内存区域中专门开辟了一块标记区域：本地方法栈，登记所有 Native 方法。在最终执行的时候，通过本地方法接口（JNI）加载本地方法库中的方法。
 
 
-> 应用场景
 
 
 
-用在ThreadLocal 的实现上。
+## PC寄存器
 
+程序计数器
 
+每个线程都有一个程序计数器，线程私有的。就是一个指针，指向方法区中的方法字节码，在执行引擎读取下一条指令，是一个非常小的空间，可以忽略不计。
 
-在以往我们使用完对象以后等着`GC`清理，但是对于`ThreadLocal`来说，即使我们使用结束，也会因为线程本身存在该对象的引用，处于对象可达状态，垃圾回收器无法回收。这个时候当`ThreadLocal`太多的时候就会出现内存泄漏的问题。
 
 
+## 方法区
 
-而我们将`ThreadLocal`对象的引用作为弱引用，那么就很好的解决了这个问题。当我们自己使用完`ThreadLocal`以后，**「当**`**GC**`**的时候就会将我们创建的强引用直接干掉，而这个时候我们完全可以将线程**`**Map**`**中的引用干掉，于是使用了弱引用」**
+方法区是所有线程共享的，所有字段和方法字节码，以及一些特殊方法，如构造函数、接口代码也在此定义。
 
 
 
-### 虚引用
+==静态变量、常量、类信息（构造方法、接口定义）、运行时的常量池存在方法区中，但是实例变量存在堆内存中，和方法区无关==
 
+总结下：static、final、class、运行时常量池
 
 
-```java
-public class Test04_PhantomReference {
-    private static final List<Object> LIST = new LinkedList<>();
-    private static final ReferenceQueue<M> QUEUE = new ReferenceQueue();
 
-    public static void main(String[] args) throws InterruptedException {
-        PhantomReference<M> m = new PhantomReference<>(new M(), QUEUE);
-        System.out.println(m.get());
-        // 分配到 JVM 内存空间
-        ByteBuffer b = ByteBuffer.allocate(1024);
-        // 直接分配到 OS 内存空间，也叫直接内存
-        //ByteBuffer b = ByteBuffer.allocateDirect(1024);
-        new Thread(()->{
-            while (true) {
-                LIST.add(new byte[1024 * 1024]);
-                try {
-                    TimeUnit.SECONDS.sleep(1);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                System.out.println(m.get());
-            }
-        }).start();
-        new Thread(()->{
-            while (true) {
-                Reference<? extends  M> poll = QUEUE.poll();
-                if (poll != null) {
-                    System.out.println("--- 虚引用对象被 jvm 回收了--- " + poll);
-                }
-            }
-        }).start();
+### 常量池
 
-        TimeUnit.SECONDS.sleep(1);
-    }
-}
-```
+类型
 
+* class 文件常量池
+* 方法区的运行时常量池
 
 
-> 场景
 
 
 
-NIO 的管理直接内存
+## 栈
 
+线程私有
 
 
-先了解下网络编程：ByteBuffer 一般用于网络编程，网卡将接收到的数据先放到 OS 中，然后 OS 会拷贝到 JVM 中，这种拷贝很频繁，在 JDK 1.5 后，提出了直接内存，省去了拷贝。具体参考 NIO 的 zero copy 零拷贝。现在的网络框架使用的都是直接内存。
 
+栈内容
 
+* 8 大基本类型
+* 对象引用
+* 实例方法
 
-```java
-// 分配到 JVM 内存空间，堆内存
-ByteBuffer b = ByteBuffer.allocate(1024);
-// 直接分配到 OS 内存空间，也叫直接内存（JVM堆外内存）
-ByteBuffer b = ByteBuffer.allocateDirect(1024);
-```
 
 
 
-虚引用（看源码）指向了直接内存，并将对象的状态维护在事件队列中
 
 
 
-- 对象 finalize 时，将信息维护在事件队列中？？
+> 栈运行原理
 
+入栈的方式 TODO
 
 
-GC 是 C++ 程序，可以管理内存。正常的只管理 JVM 中的内存，当发现有虚引用事件队列时，会开启另外的线程去管理操作系统的内存，即直接内存。
+
+当方法执行时以帧的结构入栈
+
+其父帧指向调用者
+
+程序正在执行的方法，一定在栈的顶部
+
+TODO
+
+
+
+> 引发StackOverFlowError
+
+例子：递归错误导致的方法之间循环调用
+
+
+
+> 栈、堆、方法区的交互关系
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### 栈帧
+
+栈的单位是帧
+
+包含
+
+* 方法索引
+* 输入输出参数
+* 本地变量
+* Class File
+* 父帧
+* 子帧
+
+
+
+
+
+## 堆
+
+
+
+
+
+## 对象实例化
+
+> 实例化的方法
+
+* new
+* Class.newInstance
+* Constructor.newInstance
+* clone
+* 反序列化
+
+==注==：clone 和序列化并没有额外调用构造器
+
+
+
+> 实例化的过程
+
+简单类对象的实例化过程:
+
+1. 在方法区加载类
+2. 在栈内存申请空间，声明变量P
+3. 在堆内存中开辟空间，分配对象地址
+4. 在对象空间中，对对象的属性进行默认初始化，类成员变量显示初始化
+5. 构造方法进栈，进行初始化
+6. 初始化完成后，将堆内存中的地址赋给引用变量，构造方法出栈
+
+[![简单类对象的实例化过程](Java.assets/UrHI8e.png)](https://s1.ax1x.com/2020/07/17/UrHI8e.png)
+
+------
+
+子类对象的实例化过程：
+
+1. 在方法区先加载父类，再加载子类
+2. 在栈中申请空间，声明变量P
+3. 在堆内存中开辟空间，分配对象地址
+4. 在对象空间中，对对象的属性（包括父类的属性）进行默认初始化
+5. 子类构造方法进栈
+6. 显示初始化父类的属性
+7. 父类构造方法进栈，执行完毕出栈
+8. 显示初始化子类的属性
+9. 初始化完毕后，将堆内存中的地址值赋给引用变量P，子类构造方法出栈
+
+[![子类对象的实例化过程](Java.assets/Ur7omq.png)](https://s1.ax1x.com/2020/07/17/Ur7omq.png)
+
+
+
+
+
+## 三种JVM
+
+通过 java -version 查看当前的虚拟机
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## 新生区、老年区
+
+
+
+
+
+
+
+## 永久区
+
+
+
+
+
+## 堆内存调优
+
+扩大内存
+
+
+
+
+
+## GC
+
+常用算法
+
+
+
+
+
+
+
+## JMM
+
+
+
+
 
 
 
