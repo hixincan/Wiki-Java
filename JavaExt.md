@@ -6,6 +6,10 @@
 
 
 
+JDK：https://www.oracle.com/java/technologies/javase-downloads.html
+
+
+
 JVM：https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-2.html 
 
 

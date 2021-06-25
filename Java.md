@@ -2644,6 +2644,8 @@ TODO
 
 ## GC
 
+https://zhuanlan.zhihu.com/p/383179950
+
 常用算法
 
 
