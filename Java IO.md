@@ -3,13 +3,7 @@
 参考：
 
 * https://bbs.gameres.com/thread_842984_1_1.html
-* 
 * [linux内核之：深度理解 epoll 本质](https://www.cnblogs.com/yougewe/articles/12355610.html)
-* 
-
-
-
-
 
 
 
@@ -49,10 +43,6 @@ IO模型就是说用什么样的通道进行数据的发送和接收，Java共�
 
 * 利用多进程，每个进程单条线程去利用多核CPU。**但是这又引入了新的问题：进程间状态共享和通信**。但是对于提升的性能来说，可以忽略不计。
 * 协程
-
-
-
-
 
 
 
@@ -125,7 +115,6 @@ public static void main(String[] args) throws IOException {
                 e.printStackTrace();
             }
         }).start();
-
     }
 }
 ```
@@ -365,19 +354,51 @@ wait 监听
 I/O多路复用底层主要用的Linux 内核函数（select，poll，epoll）来实现，windows不支持epoll实现，windows底层是基于winsock2的
 select函数实现的(不开源)  
 
-|          | select                                         | poll                                           | epoll（JDK 1.5）                                             |
+|          | select（JDK 1.4）                              | poll                                           | epoll（JDK 1.5）                                             |
 | -------- | ---------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------ |
 | 操作方式 | 遍历                                           | 遍历                                           | 回调                                                         |
 | 底层实现 | 数组                                           | 链表                                           | 哈希表                                                       |
 | IO效率   | 每次调用都进行线性遍历，<br />时间复杂度为O(n) | 每次调用都进行线性遍历，<br />时间复杂度为O(n) | 事件通知方式，每当有IO事件就绪，<br />系统注册的回调函数就会被调用，时间复杂度O(1) |
-| 最大连接 | 有上限                                         | 无上限                                         | 无上限                                                       |
+| 最大连接 | 有上限（1024）                                 | 无上限                                         | 无上限                                                       |
 
 
 
-## Redis线程模型 
+
+
+
+
+### Redis线程模型 
 
 Redis就是典型的基于epoll的NIO线程模型(nginx也是)，epoll实例收集所有事件(连接与读写事件)，由一个服务端线程连续处理所有事件
 命令。  
+
+
+
+调用 epoll 操作系统函数来实现的 epoll_create、epoll_ctl、epoll_wait 。
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+### Netty 线程模型 
+
+
+
+
+
+
+
+
+
+
 
 
 

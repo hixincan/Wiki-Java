@@ -2,6 +2,12 @@
 
 
 
+参考
+
+* http://mishadoff.com/blog/java-magic-part-4-sun-dot-misc-dot-unsafe/
+
+
+
 
 
 # 并发编程
@@ -14,9 +20,25 @@
 
 
 
+## 进程
+
+操作系统会分配给进程内存、文件资源。进程的切换会保存进程表。
 
 
-## ThreadLocal
+
+## 线程
+
+进程是线程的容器，操作系统会分配给线程的只有CPU的资源，线程的切换是轻量级的，只有寄存器数据需要保存起来。
+
+
+
+
+
+### ThreadLocal
+
+线程共享进程内存，ThreadLocal就是通过抽象数据结构来实现的线程本地对象，其他线程无法访问和修改。
+
+
 
 ```java
 ThreadLocal<Integer> threadLocal = new ThreadLocal<>();
@@ -161,7 +183,7 @@ ThreadLocal 可能会造成内存泄漏，我们在使用完后，务必要调�
 
 
 
-## ThreadLocalMap
+### ThreadLocalMap
 
 解决哈希冲突的方式是线性探测法：如果当前数组位有值，则判断下一个数组位是否有值，如果有值继续向下寻找，直到一个为空的数组位
 
@@ -175,13 +197,29 @@ ThreadLocal 可能会造成内存泄漏，我们在使用完后，务必要调�
 
 
 
+
+
 ## 线程池
 
 
 
 
 
-> 线程创建方法
+# 同步器
+
+
+
+## 同步
+
+### 执行同步
+
+多个参与线程并发执行，在某一点汇合（join），执行后续操作
+
+
+
+### 数据同步
+
+多份数据保持数据一致
 
 
 
@@ -189,28 +227,105 @@ ThreadLocal 可能会造成内存泄漏，我们在使用完后，务必要调�
 
 
 
-## 锁
-
-synchronized ：传统的锁
-
-新版要用 JUC 包，java.util.concurrent
 
 
 
-公平锁：先进先出，实际场景，耗时的线程会阻塞一些小线程，3h，3s 
 
-非公平锁：默认，
+## Synchronized
 
-
-
-### Synchronized
-
-
-
-#### 双重检查锁（DCL）
+synchronized 是最早的同步实现，一切从这里开始
 
 ```java
+synchronized(obj) {
+    // 临界区
+}
+```
 
+转换成伪码
+
+```java
+enterLock;
+// 临界区
+releaseLock;
+```
+
+
+
+
+
+synchronized 需要满足的能力
+
+* 实现锁/解锁
+* 实现自旋锁到休眠的升级逻辑
+* API设计：每个对象都可以上锁
+* 线程在竞争不到资源时休眠
+* 释放资源时唤醒线程
+
+
+
+
+
+
+
+### 线程休眠
+
+访问临界区代码，在未获取到锁时，线程要进入休眠
+
+| 休眠机制                                  | 描述             | 特点                                                         |
+| ----------------------------------------- | ---------------- | ------------------------------------------------------------ |
+| 休眠少量CPU周期（自旋锁）                 | 以慢速执行指令   | CPU 较少分配给该线程资源<br />CPU 能耗少，发热少，低温状态CPU性能更好 |
+| 定时休眠（类似Thread.sleep）              | 休眠固定时间0    | CPU 停止分配线程资源；<br />时间所有浪费，用户体验不好       |
+| ==信号休眠、信号唤醒（类似wait/notify）== | 等待其他线程唤醒 | 性能和体验都更好                                             |
+
+> 休眠方案一
+
+先尝试自旋（默认10次），再尝试信号休眠、唤醒
+
+
+
+object.wait
+
+object.notify
+
+
+
+
+
+### 线程唤醒
+
+
+
+**JVM 知道哪些线程在哪些对象上休眠？**
+
+
+
+
+
+
+
+### 对象锁
+
+ 
+
+
+
+
+
+
+
+
+
+### 底层实现
+
+由一对指令括起来的代码 monitorenter， monitorexit 
+
+
+
+
+
+### 双重检查锁（DCL）
+
+```java
 if() {
     synchronized(this) {
         if() return ;
@@ -231,27 +346,7 @@ if() {
 
 
 
-
-
-### Lock
-
-
-
-> Synchronized 和 Lock 区别
-
-1. Synchronized 内置的Java关键字， Lock 是一个Java类
-2. Synchronized 无法判断获取锁的状态，Lock 可以判断是否获取到了锁（TODO 应用场景）
-3. Synchronized 会自动释放锁，lock 必须要手动释放锁！如果不释放锁，死锁（类似开车中的自动挡和手动挡，问开车比赛中为什么都是手动挡，车手要尽可能把赛车的性能发挥到极致，这就需要对车有更精准的控制）
-4. Synchronized 线程 1（获得锁，阻塞，获得锁可能又阻塞了，TODO 场景）、线程2（等待，傻傻的等，暗含效率低）；Lock锁就不一定会等待下去（lock. tryLock 不会傻傻等， TODO tryLock 时机）；
-5. Synchronized 可重入锁，不可以中断的，非公平；Lock ，可重入锁，可以 判断锁，非公平（可以
-    自己设置）；
-6. Synchronized 适合锁少量的代码同步问题（TODO 最佳实践吗？），Lock 适合锁大量的同步代码！
-
-
-
-> 锁是什么，如何判断锁的是谁！ 
-
-synchronized 若修饰的是方法，那么锁的是该类的实例对象，若修饰的是 static 方法，那么锁就是 Class 对象（模板）
+## Lock
 
 
 
@@ -418,240 +513,215 @@ public class CustomReentrantLock {
 
 
 
-## 生产者消费者问题 
-
-线程交替执行
-
-线程之间的通信问题，必然提到生产者和消费者问题
-
-例子：
-
-A B 操作同一个变量 num = 0 ，先是 A num +1，再是 B num -1。要保证有序交替。
-
-多线程开发中涉及到共享资源的，必须加锁
-
-> 实现一：Synchronized 版（老版），使用 wait（等待唤醒） 和 notify（通知唤醒） 实现，这三个是一组的。
-
-wait、notify 是 Object 类，所以每个Java实例都有
-
-```java
-/**
- * 线程交替
- * 线程 A: num +1
- * 线程 B: num -1
- */
-public class ConsumeAndProduceTest {
-    public static void main(String[] args) {
-        Num num = new Num();
-        new Thread(()->{
-            for (int i = 0; i < 20; i++) {
-                try {
-                    num.incr();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }, "A").start();
-
-        new Thread(()->{
-            for (int i = 0; i < 20; i++) {
-                try {
-                    num.decr();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }, "B").start();
-    }
-}
-
-class Num {
-    private int val = 0;
-
-    public synchronized void incr() throws InterruptedException {
-        if (val != 0) {
-            this.wait();
-        }
-        this.val++;
-        System.out.println(Thread.currentThread().getName() + "=>" + this.val);
-        this.notify();
-    }
-
-    public synchronized void decr() throws InterruptedException {
-        if (val == 0) {
-            this.wait();
-        }
-        this.val--;
-        System.out.println(Thread.currentThread().getName() + "=>" + this.val);
-        this.notify();
-    }
-}
-```
-
-> 当由两个线程，变为4个线程时，上面的代码会出现问题，如何解决？
-
-问题原因
-
-* notify 没有分组，可能同是 +1 的线程先拿到锁
-* 线程业务操作时，没有再次判断条件
-
-上面就是**虚假唤醒**
-
-用 while 替代 if
-
-
-
-> JUC 版（新版）生产者消费者
-
-新老版有个对应关系
-
-![image-20210603120135357](Java.assets/image-20210603120135357.png)
-
-
-
-```java
-// 数字 资源类
-public class JUCData {
-    private int number = 0;
-
-    Lock lock = new ReentrantLock();
-    Condition condition = lock.newCondition();
-    public void increment() throws InterruptedException {
-        lock.lock();
-        try {
-            while (number != 0) {
-                condition.await();
-            }
-            number++;
-            System.out.println(Thread.currentThread().getName() + "=>" + number);
-            condition.signalAll();
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    public void decrement() throws InterruptedException {
-        lock.lock();
-        try {
-            while (number == 0) {
-                condition.await();
-            }
-            number--;
-            System.out.println(Thread.currentThread().getName() + "=>" + number);
-            condition.signalAll();
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            lock.unlock();
-        }
-    }
-}
-```
-
-实现了 synchronized 版本，一样的效果，但诞生新技术的意义是？
-
-> Condition
-
-Condition 的诞生，解决了线程的有序问题
-
-Condition 精准的通知和唤醒线程
-
-
-
-![image-20210603162857703](Java.assets/image-20210603162857703.png)
-
-报错原因是忘记加锁了，没有加锁，直接调用 Condition 或 lock.unlock
-
-```java
-public class JUC_02_Order {
-    public static void main(String[] args) {
-        JUCData02 data = new JUCData02();
-        new Thread(() -> {
-            for (int i = 0; i < 10; i++) {
-                data.printA();
-            }
-        }, "A").start();
-
-        new Thread(() -> {
-            for (int i = 0; i < 10; i++) {
-                data.printB();
-            }
-        }, "B").start();
-        new Thread(() -> {
-            for (int i = 0; i < 10; i++) {
-                data.printC();
-            }
-        }, "C").start();
-    }
-}
-
-
-// 数字 资源类
-class JUCData02 {
-    private Lock lock = new ReentrantLock();
-    private Condition condition1 = lock.newCondition();
-    private Condition condition2 = lock.newCondition();
-    private Condition condition3 = lock.newCondition();
-
-    private int number = 1; // 1A 2B 3C
-
-    public void printA() {
-        lock.lock();
-        try {
-            while (number % 3 != 1) {
-                condition1.await();
-            }
-            System.out.println(Thread.currentThread().getName() + "=>" + number);
-            number++;
-            condition2.signal();
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            lock.unlock();
-        }
-    }
-    public void printB() {
-        lock.lock();
-        try {
-            while (number % 3 != 2) {
-                condition2.await();
-            }
-            System.out.println(Thread.currentThread().getName() + "=>" + number);
-            number++;
-            condition3.signal();
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            lock.unlock();
-        }
-    }
-    public void printC() {
-        lock.lock();
-        try {
-            while (number % 3 != 0) {
-                condition3.await();
-            }
-            System.out.println(Thread.currentThread().getName() + "=>" + number);
-            number++;
-            condition1.signal();
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            lock.unlock();
-        }
-    }
-}
-```
+### ReenterantReadWriteLock
 
 
 
 
 
-## volatile 关键字
 
 
+> Synchronized 和 Lock 区别
+
+1. Synchronized 内置的Java关键字， Lock 是一个Java类
+2. Synchronized 无法判断获取锁的状态，Lock 可以判断是否获取到了锁（TODO 应用场景）
+3. Synchronized 会自动释放锁，lock 必须要手动释放锁！如果不释放锁，死锁（类似开车中的自动挡和手动挡，问开车比赛中为什么都是手动挡，车手要尽可能把赛车的性能发挥到极致，这就需要对车有更精准的控制）
+4. Synchronized 线程 1（获得锁，阻塞，获得锁可能又阻塞了，TODO 场景）、线程2（等待，傻傻的等，暗含效率低）；Lock锁就不一定会等待下去（lock. tryLock 不会傻傻等， TODO tryLock 时机）；
+5. Synchronized 可重入锁，不可以中断的，非公平；Lock ，可重入锁，可以 判断锁，非公平（可以
+    自己设置）；
+6. Synchronized 适合锁少量的代码同步问题（TODO 最佳实践吗？），Lock 适合锁大量的同步代码！
+
+
+
+> 锁是什么，如何判断锁的是谁！ 
+
+synchronized 若修饰的是方法，那么锁的是该类的实例对象，若修饰的是 static 方法，那么锁就是 Class 对象（模板）
+
+
+
+
+
+
+
+## CAS
+
+
+
+### ABA
+
+参考：https://developer.aliyun.com/article/744324?spm=a2c6h.12873639.0.0.1bf75749dEe9BJ
+
+
+
+ABA 描述（略）
+
+
+
+### volatile 关键字
+
+
+
+ABA 在一些特殊场景下，会存在问题，举一个堆栈操作的例子：
+![image.png](Java%20Concurrent.assets/e1410ebfcff24e5fa07d221c9ccbdd86.png)
+
+并发1（上）：读取栈顶的元素为“A1”
+![image.png](Java%20Concurrent.assets/4ac7953bf7ce49d0b311eec183112c64.png)
+
+并发2：进行了2次出栈
+![image.png](Java%20Concurrent.assets/753620f216844ddab8644977c690ba02.png)
+
+并发3：又进行了1次出栈
+![image.png](Java%20Concurrent.assets/6e4f196a51dc4a70ab32afb95f5726aa.png)
+
+并发1（下）：实施CAS乐观锁，发现栈顶还是“A1”，于是修改为A2
+![image.png](Java%20Concurrent.assets/6522f715f0fa46bdb0b437b8c9dee828.png)
+
+此时会出现系统错误，因为此“A1”非彼“A1” 
+
+
+
+再举个例子，有一个链表 head->A->B—>C，线程1要把A都移除掉，线程2发现有B就再B前加一个A。线程1、2 就会频繁加减元素。
+
+
+
+**ABA问题可以怎么优化？**
+
+* AtomicMarkableReference（boolean表示版本）
+* AtomicStampedReference（int表示版本）
+
+实现原理是增加版本，让 CAS 从整体看，除了看值本身，还看版本是否正确！
+
+
+
+## Atmoic类
+
+底层是 CAS 原子指令实现
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## 工具对比
+
+|      | Synchronized | Lock | CAS  | Atmoic |
+| ---- | ------------ | ---- | ---- | ------ |
+| 性能 | 低           | 中   | 高   | 高     |
+|      |              |      |      |        |
+|      |              |      |      |        |
+
+
+
+
+
+
+
+# AQS
+
+同步器开发框架
+
+**AQS**：AbstractQueuedSynchronizer
+
+
+
+用来给程序员自定义同步器
+
+
+
+<img src="Java%20Concurrent.assets/image-20210630181020001.png" alt="image-20210630181020001" style="zoom: 67%;" />	
+
+
+
+
+
+| 休眠+唤醒                      | 是否加锁                 | 备注                   |
+| ------------------------------ | ------------------------ | ---------------------- |
+| Object.wait/notify             | 需要加锁，因为非原子操作 | 需要锁，否则会竞争条件 |
+| Lock.newCondition.await/signal | 需要加锁，因为非原子操作 | 需要锁，否则会竞争条件 |
+| LockSupport.park/unpark        | 无须加锁，因为底层方法   |                        |
+
+
+
+synchronized的缺点
+
+* 不能让用户实现更底层的数据结构
+
+
+
+AQS，Java中的抽象类都是为了简化开发，防止程序犯一些低级的错误。
+
+
+
+AQS 提供的能力
+
+* tryLock  - 超时
+* 接收线程中断
+* tryAcquire 非阻塞版获取锁
+* release 释放锁
+* acquire 获取锁
+* condition 条件变量（操作系统提供，基于整数的生产者/消费者模型）
+* int state > CAS（替代 unsafe 的 cas）
+* 队列
+
+
+
+
+
+
+
+
+
+
+
+----------------
+
+
+
+
+
+
+
+
+
+
+
+# 锁
+
+|          | 描述                                                         | 实现原理                                          | 是否公平                                     |
+| -------- | ------------------------------------------------------------ | ------------------------------------------------- | -------------------------------------------- |
+| 自旋锁   | 线程自旋一定次数，如10次，若没有竞争到锁，<br />则会升级重量级锁。<br />但高并发场景下，线程可能都会执行完自旋次数，<br />性能浪费 | java 实现自旋，CAS 尝试                           | 公平                                         |
+| 轻量级锁 | 线程先逐个插入EntrySet队列尾部，仅头部的线程自旋，竞争失败，则升级到重量级锁。 | java实现EntrySet                                  | 公平                                         |
+| 重量级锁 |                                                              | 操作系统实现WaitSet，操作系统可见的休眠线程范围。 | 公平                                         |
+| 偏向锁   | 看 Object的偏向锁位置是否存在owner线程，<br />如果竞争成功，这里会插对优先执行 | java实现的部分，更加轻量                          | 非公平：当前线程插队，避免进程切换，效率更高 |
+
+
+
+
+
+
+
+
+
+# JUC
+
+java.util.concurrent
 
 
 
@@ -912,9 +982,256 @@ semaphore.release(); 释放，会将当前的信号量释放 + 1，然后唤醒�
 
 
 
-## 综合应用
+# 综合应用
 
-### 实现分布式事务
+
+
+
+
+## 生产者/消费者
+
+这个模型非常普遍，如发红包抢红包
+
+
+
+抽象为  读/计算/写 模型
+
+
+
+
+
+线程交替执行
+
+线程之间的通信问题，必然提到生产者和消费者问题
+
+例子：
+
+A B 操作同一个变量 num = 0 ，先是 A num +1，再是 B num -1。要保证有序交替。
+
+多线程开发中涉及到共享资源的，必须加锁
+
+> 实现一：Synchronized 版（老版），使用 wait（等待唤醒） 和 notify（通知唤醒） 实现，这三个是一组的。
+
+wait、notify 是 Object 类，所以每个Java实例都有
+
+```java
+/**
+ * 线程交替
+ * 线程 A: num +1
+ * 线程 B: num -1
+ */
+public class ConsumeAndProduceTest {
+    public static void main(String[] args) {
+        Num num = new Num();
+        new Thread(()->{
+            for (int i = 0; i < 20; i++) {
+                try {
+                    num.incr();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, "A").start();
+
+        new Thread(()->{
+            for (int i = 0; i < 20; i++) {
+                try {
+                    num.decr();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, "B").start();
+    }
+}
+
+class Num {
+    private int val = 0;
+
+    public synchronized void incr() throws InterruptedException {
+        if (val != 0) {
+            this.wait();
+        }
+        this.val++;
+        System.out.println(Thread.currentThread().getName() + "=>" + this.val);
+        this.notify();
+    }
+
+    public synchronized void decr() throws InterruptedException {
+        if (val == 0) {
+            this.wait();
+        }
+        this.val--;
+        System.out.println(Thread.currentThread().getName() + "=>" + this.val);
+        this.notify();
+    }
+}
+```
+
+> 当由两个线程，变为4个线程时，上面的代码会出现问题，如何解决？
+
+问题原因
+
+* notify 没有分组，可能同是 +1 的线程先拿到锁
+* 线程业务操作时，没有再次判断条件
+
+上面就是**虚假唤醒**
+
+用 while 替代 if
+
+
+
+> JUC 版（新版）生产者消费者
+
+新老版有个对应关系
+
+![image-20210603120135357](Java.assets/image-20210603120135357.png)
+
+
+
+```java
+// 数字 资源类
+public class JUCData {
+    private int number = 0;
+
+    Lock lock = new ReentrantLock();
+    Condition condition = lock.newCondition();
+    public void increment() throws InterruptedException {
+        lock.lock();
+        try {
+            while (number != 0) {
+                condition.await();
+            }
+            number++;
+            System.out.println(Thread.currentThread().getName() + "=>" + number);
+            condition.signalAll();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void decrement() throws InterruptedException {
+        lock.lock();
+        try {
+            while (number == 0) {
+                condition.await();
+            }
+            number--;
+            System.out.println(Thread.currentThread().getName() + "=>" + number);
+            condition.signalAll();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+    }
+}
+```
+
+实现了 synchronized 版本，一样的效果，但诞生新技术的意义是？
+
+> Condition
+
+Condition 的诞生，解决了线程的有序问题
+
+Condition 精准的通知和唤醒线程
+
+
+
+![image-20210603162857703](Java.assets/image-20210603162857703.png)
+
+报错原因是忘记加锁了，没有加锁，直接调用 Condition 或 lock.unlock
+
+```java
+public class JUC_02_Order {
+    public static void main(String[] args) {
+        JUCData02 data = new JUCData02();
+        new Thread(() -> {
+            for (int i = 0; i < 10; i++) {
+                data.printA();
+            }
+        }, "A").start();
+
+        new Thread(() -> {
+            for (int i = 0; i < 10; i++) {
+                data.printB();
+            }
+        }, "B").start();
+        new Thread(() -> {
+            for (int i = 0; i < 10; i++) {
+                data.printC();
+            }
+        }, "C").start();
+    }
+}
+
+
+// 数字 资源类
+class JUCData02 {
+    private Lock lock = new ReentrantLock();
+    private Condition condition1 = lock.newCondition();
+    private Condition condition2 = lock.newCondition();
+    private Condition condition3 = lock.newCondition();
+
+    private int number = 1; // 1A 2B 3C
+
+    public void printA() {
+        lock.lock();
+        try {
+            while (number % 3 != 1) {
+                condition1.await();
+            }
+            System.out.println(Thread.currentThread().getName() + "=>" + number);
+            number++;
+            condition2.signal();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+    }
+    public void printB() {
+        lock.lock();
+        try {
+            while (number % 3 != 2) {
+                condition2.await();
+            }
+            System.out.println(Thread.currentThread().getName() + "=>" + number);
+            number++;
+            condition3.signal();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+    }
+    public void printC() {
+        lock.lock();
+        try {
+            while (number % 3 != 0) {
+                condition3.await();
+            }
+            System.out.println(Thread.currentThread().getName() + "=>" + number);
+            number++;
+            condition1.signal();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+    }
+}
+```
+
+
+
+
+
+
+
+## 实现分布式事务
 
 扼要技术点
 
